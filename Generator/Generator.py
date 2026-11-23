@@ -1,21 +1,28 @@
 import  pandas as pd
+from io import BytesIO
+from shutil import copyfileobj
 
-
-
-def apagar(caminho):
+def eraser(file):
     import os
-    if os.path.isfile(caminho):
-        os.remove(caminho)
+    if os.path.isfile(file):
+        os.remove(file)
         print("Arquivo apagado com sucesso.")
     else:
         print("Arquivo não encontrado.")
 
-def create(novo_file, fonte):
-    #codigo Copilot
+def save(name, uploaded_file):
+    source = getattr(uploaded_file, "stream", uploaded_file)
+    source.seek(0)
+    with open(name, "wb") as destination:
+        copyfileobj(source, destination)
+    return True
+
+def create(source, num):
+   
     from sdv.metadata import Metadata
     from sdv.single_table import GaussianCopulaSynthesizer
 
-    dados_amostra = pd.read_excel(fonte)
+    dados_amostra = pd.read_excel(source)
     colunas = ["Nome Científico", "CAP cm", "Ht (m)"]
 
     if not all(coluna in dados_amostra.columns for coluna in colunas):
@@ -45,7 +52,7 @@ def create(novo_file, fonte):
         enforce_rounding=True
     )
     sintetizador.fit({"dados": dados_amostra})
-    dados_sinteticos = sintetizador.sample(num_rows=1000)["dados"]
+    dados_sinteticos = sintetizador.sample(num_rows=num)["dados"]
 
     dados_sinteticos = dados_sinteticos[colunas]
     dados_sinteticos[["CAP cm", "Ht (m)"]] = dados_sinteticos[
@@ -63,14 +70,14 @@ def create(novo_file, fonte):
     )
 
     dados_sinteticos = dados_sinteticos.reset_index(drop=True)
-    dados_sinteticos.to_excel(novo_file, index=False, sheet_name="Dados")
+    generated_file = BytesIO()
+    dados_sinteticos.to_excel(generated_file, index=False, sheet_name="Dados")
+    generated_file.seek(0)
 
-    return novo_file
+    return generated_file
 
-fonte="arquivo.xlsx"
-
-df = pd.read_excel(fonte)
-print(df.head())
-novo_file="gerados.xlsx"
-
-create(novo_file, fonte)
+if __name__=="__main__":
+    fonte="arquivo.xlsx"
+    new_file="gerados.xlsx"
+    print("ola")
+    save(new_file, create(fonte, 20))

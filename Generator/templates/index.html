@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Excel file</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 3rem auto;
+      max-width: 36rem;
+      padding: 0 1rem;
+    }
+
+    form {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .drop-zone {
+      border: 2px dashed #777;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .drop-zone.dragging {
+      background: #eef5ff;
+      border-color: #1769aa;
+    }
+
+    input, button {
+      font: inherit;
+      padding: 0.5rem;
+    }
+
+    .error {
+      color: #b00020;
+    }
+  </style>
+</head>
+<body>
+  <h1>Create Excel file</h1>
+  <form id="create-form" method="post" enctype="multipart/form-data" novalidate>
+    <div class="drop-zone" id="drop-zone">
+      <label for="file_xlsx">Drop an .xlsx file here or choose one</label>
+      <input id="file_xlsx" name="file_xlsx" type="file" accept=".xlsx" required>
+    </div>
+
+    <label for="number">Number of rows</label>
+    <input id="number" name="number" type="number" min="1" step="1" inputmode="numeric" required>
+
+    <p id="form-error" class="error" role="alert" aria-live="polite"
+       {% if not error %}hidden{% endif %}>{{ error or "" }}</p>
+
+    <button type="submit">Create</button>
+  </form>
+
+  <script>
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("file_xlsx");
+    const numberInput = document.getElementById("number");
+    const form = document.getElementById("create-form");
+    const errorMessage = document.getElementById("form-error");
+    let submitted = false;
+
+    function validateForm() {
+      const file = fileInput.files[0];
+      let message = "";
+
+      if (!file) {
+        message = "Please choose an .xlsx file.";
+      } else if (!/\.xlsx$/i.test(file.name)) {
+        message = "The uploaded file must be an .xlsx file.";
+      } else if (
+        !numberInput.value ||
+        !Number.isInteger(Number(numberInput.value)) ||
+        Number(numberInput.value) < 1
+      ) {
+        message = "Enter a positive whole number.";
+      }
+
+      errorMessage.textContent = message;
+      errorMessage.hidden = !message;
+      return !message;
+    }
+
+    form.addEventListener("submit", (event) => {
+      submitted = true;
+      if (!validateForm()) {
+        event.preventDefault();
+      }
+    });
+
+    [fileInput, numberInput].forEach((input) => {
+      input.addEventListener("input", () => {
+        if (submitted) {
+          validateForm();
+        }
+      });
+      input.addEventListener("change", () => {
+        if (submitted) {
+          validateForm();
+        }
+      });
+    });
+
+    dropZone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropZone.classList.add("dragging");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragging");
+    });
+
+    dropZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      dropZone.classList.remove("dragging");
+      if (event.dataTransfer.files.length) {
+        fileInput.files = event.dataTransfer.files;
+      }
+    });
+  </script>
+</body>
+</html>
