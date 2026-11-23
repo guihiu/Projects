@@ -6,7 +6,6 @@ def eraser(file):
     import os
     if os.path.isfile(file):
         os.remove(file)
-        print("Arquivo apagado com sucesso.")
     else:
         print("Arquivo não encontrado.")
 
