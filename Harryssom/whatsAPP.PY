@@ -68,6 +68,21 @@ def connection(timeout: float = 120) -> bool:
     return True
 
 
+def status() -> bool:
+    """Return whether the current Chrome session is connected to WhatsApp Web."""
+    if _driver is None:
+        return False
+
+    try:
+        return any(
+            chat_list.is_displayed()
+            for chat_list in _driver.find_elements(By.CSS_SELECTOR, _CHAT_LIST)
+        )
+    except WebDriverException:
+        logger.warning("Could not check the WhatsApp Web connection", exc_info=True)
+        return False
+
+
 def send(phone_number: str | int, message: str) -> bool:
     """Send one text message to a phone number in international format."""
     if isinstance(phone_number, bool) or not isinstance(phone_number, (str, int)):
@@ -233,7 +248,12 @@ def _contact_name(browser: webdriver.Chrome) -> str:
 if __name__=='__main__':
 
     teste=connection()
-    print(teste)
-    print (receive())
+    print(status())
+    time.sleep(5)
+    phone_number="+5599984803624"
+    send(phone_number," esta funcionando ")
+    time.sleep(5)
+    
+    
 
     
